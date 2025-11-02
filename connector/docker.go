@@ -69,6 +69,7 @@ func NewDocker() (Connector, error) {
 
 	go cm.Loop()
 	go cm.LoopStatuses()
+	go cm.LoopUptimeUpdates()
 	cm.refreshAll()
 	go cm.watchEvents()
 	return cm, nil
@@ -189,7 +190,15 @@ func (cm *Docker) refresh(c *container.Container) {
 		c.SetMeta("Web Port", webPort)
 	}
 	c.SetMeta("created", insp.Created.Format("Mon Jan 02 15:04:05 2006"))
-	c.SetMeta("uptime", calcUptime(insp))
+	// Store timestamps for live uptime updates
+	c.SetMeta("started_at", insp.State.StartedAt.Format(time.RFC3339))
+	c.SetMeta("finished_at", insp.State.FinishedAt.Format(time.RFC3339))
+	// Only show uptime for running containers
+	if insp.State.Running {
+		c.SetMeta("uptime", calcUptime(insp))
+	} else {
+		c.SetMeta("uptime", "-")
+	}
 	c.SetMeta("health", insp.State.Health.Status)
 	c.SetMeta("[ENV-VAR]", strings.Join(insp.Config.Env, ";"))
 	c.SetState(insp.State.Status)
@@ -258,6 +267,38 @@ func (cm *Docker) LoopStatuses() {
 					c.SetState(statusUpdate.Status)
 				}
 			}
+		case <-cm.closed:
+			return
+		}
+	}
+}
+
+// LoopUptimeUpdates periodically updates uptime for running containers
+func (cm *Docker) LoopUptimeUpdates() {
+	ticker := time.NewTicker(1 * time.Second)
+	defer ticker.Stop()
+
+	for {
+		select {
+		case <-ticker.C:
+			cm.lock.RLock()
+			for _, c := range cm.containers {
+				// Only show uptime for running containers
+				if c.Meta["state"] == "running" {
+					startedAtStr := c.GetMeta("started_at")
+					if startedAtStr != "" {
+						startedAt, err := time.Parse(time.RFC3339, startedAtStr)
+						if err == nil {
+							uptime := time.Since(startedAt)
+							c.SetMeta("uptime", durafmt.Parse(uptime).LimitFirstN(1).String())
+						}
+					}
+				} else {
+					// Show dash for non-running containers
+					c.SetMeta("uptime", "-")
+				}
+			}
+			cm.lock.RUnlock()
 		case <-cm.closed:
 			return
 		}

@@ -123,10 +123,12 @@ func (c *Docker) ReadNet(stats *api.Stats) {
 func (c *Docker) ReadIO(stats *api.Stats) {
 	var read, write int64
 	for _, blk := range stats.BlkioStats.IOServiceBytesRecursive {
-		if blk.Op == "Read" {
+		// cgroup v1 uses "Read"/"Write" (capitalized)
+		// cgroup v2 uses "read"/"write" (lowercase)
+		if blk.Op == "Read" || blk.Op == "read" {
 			read += int64(blk.Value)
 		}
-		if blk.Op == "Write" {
+		if blk.Op == "Write" || blk.Op == "write" {
 			write += int64(blk.Value)
 		}
 	}
