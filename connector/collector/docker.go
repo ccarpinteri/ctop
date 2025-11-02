@@ -94,7 +94,19 @@ func (c *Docker) ReadCPU(stats *api.Stats) {
 }
 
 func (c *Docker) ReadMem(stats *api.Stats) {
-	c.MemUsage = int64(stats.MemoryStats.Usage - stats.MemoryStats.Stats.Cache)
+	// Calculate cache to subtract from usage
+	// Modern Docker (19.03+) and cgroup v2 use inactive_file
+	// Older Docker and cgroup v1 use cache
+	var cache uint64
+	if stats.MemoryStats.Stats.InactiveFile > 0 {
+		// Prefer InactiveFile (modern Docker/cgroup v2)
+		cache = stats.MemoryStats.Stats.InactiveFile
+	} else if stats.MemoryStats.Stats.Cache > 0 {
+		// Fall back to Cache (older Docker/cgroup v1)
+		cache = stats.MemoryStats.Stats.Cache
+	}
+
+	c.MemUsage = int64(stats.MemoryStats.Usage - cache)
 	c.MemLimit = int64(stats.MemoryStats.Limit)
 	c.MemPercent = percent(float64(c.MemUsage), float64(c.MemLimit))
 }
