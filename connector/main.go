@@ -102,3 +102,24 @@ func ByName(s string) (*ConnectorSuper, error) {
 	}
 	return nil, fmt.Errorf("invalid connector type \"%s\"", s)
 }
+
+// ByNameWithConfig returns a ConnectorSuper for Docker with custom configuration
+func ByNameWithConfig(s, hostFlag, contextFlag string) (*ConnectorSuper, error) {
+	if s != "docker" {
+		// For non-docker connectors, use default behavior
+		return ByName(s)
+	}
+
+	// Resolve Docker endpoint based on flags and environment
+	endpoint, err := ResolveDockerEndpoint(hostFlag, contextFlag)
+	if err != nil {
+		return nil, fmt.Errorf("failed to resolve Docker endpoint: %w", err)
+	}
+
+	// Create a closure that captures the endpoint configuration
+	connectorFn := func() (Connector, error) {
+		return NewDockerWithConfig(endpoint)
+	}
+
+	return NewConnectorSuper(connectorFn), nil
+}

@@ -45,6 +45,8 @@ func main() {
 		reverseSortFlag = flag.Bool("r", false, "reverse container sort order")
 		invertFlag      = flag.Bool("i", false, "invert default colors")
 		connectorFlag   = flag.String("connector", "docker", "container connector to use")
+		hostFlag        = flag.String("host", "", "Docker daemon host (e.g., tcp://192.168.1.100:2376)")
+		contextFlag     = flag.String("context", "", "Docker context to use")
 	)
 	flag.Parse()
 
@@ -97,7 +99,7 @@ func main() {
 
 	defer Shutdown()
 	// init grid, cursor, header
-	cSuper, err := connector.ByName(*connectorFlag)
+	cSuper, err := connector.ByNameWithConfig(*connectorFlag, *hostFlag, *contextFlag)
 	if err != nil {
 		panic(err)
 	}

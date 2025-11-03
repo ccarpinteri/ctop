@@ -41,8 +41,32 @@ type Docker struct {
 }
 
 func NewDocker() (Connector, error) {
-	// init docker client
-	client, err := api.NewClientFromEnv()
+	return NewDockerWithConfig(nil)
+}
+
+func NewDockerWithConfig(endpoint *DockerEndpoint) (Connector, error) {
+	var client *api.Client
+	var err error
+
+	// init docker client based on configuration
+	if endpoint != nil && endpoint.Host != "" {
+		if endpoint.TLSVerify && endpoint.CertPath != "" {
+			// Use TLS client
+			client, err = api.NewTLSClient(
+				endpoint.Host,
+				endpoint.CertFile,
+				endpoint.KeyFile,
+				endpoint.CAFile,
+			)
+		} else {
+			// Use plain client with custom host
+			client, err = api.NewClient(endpoint.Host)
+		}
+	} else {
+		// Use environment variables (default behavior)
+		client, err = api.NewClientFromEnv()
+	}
+
 	if err != nil {
 		return nil, err
 	}

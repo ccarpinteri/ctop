@@ -1,4 +1,6 @@
 ctop
+ctop-*
 .idea
 /vendor/
 *.log
+CLAUDE.md
