@@ -103,7 +103,7 @@ func main() {
 	}
 	cursor = &GridCursor{cSuper: cSuper}
 	cGrid = compact.NewCompactGrid()
-	header = widgets.NewCTopHeader()
+	header = widgets.NewCTopHeader("v" + version)
 	status = widgets.NewStatusLine()
 	errView = widgets.NewErrorView()
 

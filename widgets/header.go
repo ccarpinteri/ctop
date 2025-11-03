@@ -8,24 +8,26 @@ import (
 )
 
 type CTopHeader struct {
-	Time   *ui.Par
-	Count  *ui.Par
-	Filter *ui.Par
-	bg     *ui.Par
+	Time    *ui.Par
+	Count   *ui.Par
+	Filter  *ui.Par
+	bg      *ui.Par
+	version string
 }
 
-func NewCTopHeader() *CTopHeader {
+func NewCTopHeader(version string) *CTopHeader {
 	return &CTopHeader{
-		Time:   headerPar(2, ""),
-		Count:  headerPar(24, "-"),
-		Filter: headerPar(40, ""),
-		bg:     headerBg(),
+		Time:    headerPar(2, ""),
+		Count:   headerPar(24, "-"),
+		Filter:  headerPar(40, ""),
+		bg:      headerBg(),
+		version: version,
 	}
 }
 
 func (c *CTopHeader) Buffer() ui.Buffer {
 	buf := ui.NewBuffer()
-	c.Time.Text = timeStr()
+	c.Time.Text = c.timeStr()
 	buf.Merge(c.bg.Buffer())
 	buf.Merge(c.Time.Buffer())
 	buf.Merge(c.Count.Buffer())
@@ -70,9 +72,9 @@ func (c *CTopHeader) SetFilter(val string) {
 	}
 }
 
-func timeStr() string {
+func (c *CTopHeader) timeStr() string {
 	ts := time.Now().Local().Format("15:04:05 MST")
-	return fmt.Sprintf("ctop - %s", ts)
+	return fmt.Sprintf("ctop %s - %s", c.version, ts)
 }
 
 func headerPar(x int, s string) *ui.Par {
