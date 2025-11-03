@@ -1,0 +1,57 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.23'
+
+      - name: Get version from tag
+        id: version
+        run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+
+      - name: Build binaries for all platforms
+        run: |
+          mkdir -p _build
+          VERSION=${{ steps.version.outputs.VERSION }}
+          BUILD=$(git rev-parse --short HEAD)
+          LD_FLAGS="-w -X main.version=${VERSION} -X main.build=${BUILD}"
+
+          # Build for all platforms
+          GOOS=darwin  GOARCH=amd64   CGO_ENABLED=0 go build -tags release -ldflags "$LD_FLAGS" -o _build/ctop-${VERSION}-darwin-amd64
+          GOOS=darwin  GOARCH=arm64   CGO_ENABLED=0 go build -tags release -ldflags "$LD_FLAGS" -o _build/ctop-${VERSION}-darwin-arm64
+          GOOS=linux   GOARCH=amd64   CGO_ENABLED=0 go build -tags release -ldflags "$LD_FLAGS" -o _build/ctop-${VERSION}-linux-amd64
+          GOOS=linux   GOARCH=arm     CGO_ENABLED=0 go build -tags release -ldflags "$LD_FLAGS" -o _build/ctop-${VERSION}-linux-arm
+          GOOS=linux   GOARCH=arm64   CGO_ENABLED=0 go build -tags release -ldflags "$LD_FLAGS" -o _build/ctop-${VERSION}-linux-arm64
+          GOOS=linux   GOARCH=ppc64le CGO_ENABLED=0 go build -tags release -ldflags "$LD_FLAGS" -o _build/ctop-${VERSION}-linux-ppc64le
+          GOOS=windows GOARCH=amd64   CGO_ENABLED=0 go build -tags release -ldflags "$LD_FLAGS" -o _build/ctop-${VERSION}-windows-amd64.exe
+
+          # Generate checksums
+          cd _build
+          sha256sum * > sha256sums.txt
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: _build/*
+          draft: false
+          prerelease: false
+          generate_release_notes: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
