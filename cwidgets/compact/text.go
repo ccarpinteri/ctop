@@ -71,8 +71,13 @@ func NewIOCol() CompactCol {
 }
 
 func (w *IOCol) SetMetrics(m models.Metrics) {
-	label := fmt.Sprintf("%s / %s", cwidgets.ByteFormat64Short(m.IOBytesRead), cwidgets.ByteFormat64Short(m.IOBytesWrite))
-	w.setText(label)
+	// Show dash if BlockIO stats unavailable (requires kernel blkio cgroup support)
+	if m.IOBytesRead == 0 && m.IOBytesWrite == 0 {
+		w.setText("-")
+	} else {
+		label := fmt.Sprintf("%s / %s", cwidgets.ByteFormat64Short(m.IOBytesRead), cwidgets.ByteFormat64Short(m.IOBytesWrite))
+		w.setText(label)
+	}
 }
 
 type PIDCol struct {
@@ -86,7 +91,12 @@ func NewPIDCol() CompactCol {
 }
 
 func (w *PIDCol) SetMetrics(m models.Metrics) {
-	w.setText(fmt.Sprintf("%d", m.Pids))
+	// Show dash if PIDs stats unavailable (requires kernel cgroup support)
+	if m.Pids == 0 {
+		w.setText("-")
+	} else {
+		w.setText(fmt.Sprintf("%d", m.Pids))
+	}
 }
 
 type UptimeCol struct {
