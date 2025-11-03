@@ -28,28 +28,41 @@ jobs:
 
       - name: Build binaries for all platforms
         run: |
-          mkdir -p _build
+          mkdir -p _build _release
           VERSION=${{ steps.version.outputs.VERSION }}
           BUILD=$(git rev-parse --short HEAD)
           LD_FLAGS="-w -X main.version=${VERSION} -X main.build=${BUILD}"
 
-          # Build for all platforms
-          GOOS=darwin  GOARCH=amd64   CGO_ENABLED=0 go build -tags release -ldflags "$LD_FLAGS" -o _build/ctop-${VERSION}-darwin-amd64
-          GOOS=darwin  GOARCH=arm64   CGO_ENABLED=0 go build -tags release -ldflags "$LD_FLAGS" -o _build/ctop-${VERSION}-darwin-arm64
-          GOOS=linux   GOARCH=amd64   CGO_ENABLED=0 go build -tags release -ldflags "$LD_FLAGS" -o _build/ctop-${VERSION}-linux-amd64
-          GOOS=linux   GOARCH=arm     CGO_ENABLED=0 go build -tags release -ldflags "$LD_FLAGS" -o _build/ctop-${VERSION}-linux-arm
-          GOOS=linux   GOARCH=arm64   CGO_ENABLED=0 go build -tags release -ldflags "$LD_FLAGS" -o _build/ctop-${VERSION}-linux-arm64
-          GOOS=linux   GOARCH=ppc64le CGO_ENABLED=0 go build -tags release -ldflags "$LD_FLAGS" -o _build/ctop-${VERSION}-linux-ppc64le
-          GOOS=windows GOARCH=amd64   CGO_ENABLED=0 go build -tags release -ldflags "$LD_FLAGS" -o _build/ctop-${VERSION}-windows-amd64.exe
+          # Build for all platforms (binary always named 'ctop')
+          GOOS=darwin  GOARCH=amd64   CGO_ENABLED=0 go build -tags release -ldflags "$LD_FLAGS" -o _build/ctop
+          tar -cJf _release/ctop-${VERSION}-apple-darwin-amd64.tar.xz -C _build ctop
+
+          GOOS=darwin  GOARCH=arm64   CGO_ENABLED=0 go build -tags release -ldflags "$LD_FLAGS" -o _build/ctop
+          tar -cJf _release/ctop-${VERSION}-apple-darwin-arm64.tar.xz -C _build ctop
+
+          GOOS=linux   GOARCH=amd64   CGO_ENABLED=0 go build -tags release -ldflags "$LD_FLAGS" -o _build/ctop
+          tar -cJf _release/ctop-${VERSION}-linux-amd64.tar.xz -C _build ctop
+
+          GOOS=linux   GOARCH=arm     CGO_ENABLED=0 go build -tags release -ldflags "$LD_FLAGS" -o _build/ctop
+          tar -cJf _release/ctop-${VERSION}-linux-arm.tar.xz -C _build ctop
+
+          GOOS=linux   GOARCH=arm64   CGO_ENABLED=0 go build -tags release -ldflags "$LD_FLAGS" -o _build/ctop
+          tar -cJf _release/ctop-${VERSION}-linux-arm64.tar.xz -C _build ctop
+
+          GOOS=linux   GOARCH=ppc64le CGO_ENABLED=0 go build -tags release -ldflags "$LD_FLAGS" -o _build/ctop
+          tar -cJf _release/ctop-${VERSION}-linux-ppc64le.tar.xz -C _build ctop
+
+          GOOS=windows GOARCH=amd64   CGO_ENABLED=0 go build -tags release -ldflags "$LD_FLAGS" -o _build/ctop.exe
+          cd _build && zip ../_release/ctop-${VERSION}-windows-amd64.zip ctop.exe && cd ..
 
           # Generate checksums
-          cd _build
+          cd _release
           sha256sum * > sha256sums.txt
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
-          files: _build/*
+          files: _release/*
           draft: false
           prerelease: false
           generate_release_notes: false
