@@ -13,15 +13,17 @@ type CTopHeader struct {
 	Filter  *ui.Par
 	bg      *ui.Par
 	version string
+	count   int
 }
 
 func NewCTopHeader(version string) *CTopHeader {
 	return &CTopHeader{
-		Time:    headerParWide(2, "", 40),  // Wider for version string
-		Count:   headerPar(44, "-"),
-		Filter:  headerPar(66, ""),
+		Time:    headerParWide(2, "", 60),  // Wide enough for full string
+		Count:   headerPar(64, "-"),        // Hidden, kept for compatibility
+		Filter:  headerPar(64, ""),
 		bg:      headerBg(),
 		version: version,
+		count:   0,
 	}
 }
 
@@ -30,7 +32,7 @@ func (c *CTopHeader) Buffer() ui.Buffer {
 	c.Time.Text = c.timeStr()
 	buf.Merge(c.bg.Buffer())
 	buf.Merge(c.Time.Buffer())
-	buf.Merge(c.Count.Buffer())
+	// Count is now included in Time string
 	buf.Merge(c.Filter.Buffer())
 	return buf
 }
@@ -61,7 +63,8 @@ func headerBg() *ui.Par {
 }
 
 func (c *CTopHeader) SetCount(val int) {
-	c.Count.Text = fmt.Sprintf("%d containers", val)
+	c.count = val
+	// Count display is now handled in timeStr()
 }
 
 func (c *CTopHeader) SetFilter(val string) {
@@ -74,6 +77,9 @@ func (c *CTopHeader) SetFilter(val string) {
 
 func (c *CTopHeader) timeStr() string {
 	ts := time.Now().Local().Format("15:04:05 MST")
+	if c.count > 0 {
+		return fmt.Sprintf("ctop %s - %s - %d containers", c.version, ts, c.count)
+	}
 	return fmt.Sprintf("ctop %s - %s", c.version, ts)
 }
 
