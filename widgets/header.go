@@ -17,9 +17,9 @@ type CTopHeader struct {
 
 func NewCTopHeader(version string) *CTopHeader {
 	return &CTopHeader{
-		Time:    headerPar(2, ""),
-		Count:   headerPar(24, "-"),
-		Filter:  headerPar(40, ""),
+		Time:    headerParWide(2, "", 40),  // Wider for version string
+		Count:   headerPar(44, "-"),
+		Filter:  headerPar(66, ""),
 		bg:      headerBg(),
 		version: version,
 	}
@@ -78,11 +78,15 @@ func (c *CTopHeader) timeStr() string {
 }
 
 func headerPar(x int, s string) *ui.Par {
+	return headerParWide(x, s, 20)
+}
+
+func headerParWide(x int, s string, width int) *ui.Par {
 	p := ui.NewPar(fmt.Sprintf(" %s", s))
 	p.X = x
 	p.Border = false
 	p.Height = 1
-	p.Width = 20
+	p.Width = width
 	p.Bg = ui.ThemeAttr("header.bg")
 	p.TextFgColor = ui.ThemeAttr("header.fg")
 	p.TextBgColor = ui.ThemeAttr("header.bg")
