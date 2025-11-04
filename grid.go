@@ -136,6 +136,19 @@ func Display() bool {
 	HandleKeys("pgup", cursor.PgUp)
 	HandleKeys("pgdown", cursor.PgDown)
 
+	// Horizontal scrolling: < and >
+	scrollLeft := func() {
+		cGrid.ScrollLeft()
+		RedrawRows(true) // Redraw with clear to fix alignment
+	}
+	scrollRight := func() {
+		cGrid.ScrollRight()
+		RedrawRows(true) // Redraw with clear to fix alignment
+	}
+
+	ui.Handle("/sys/kbd/<", func(ui.Event) { scrollLeft() })
+	ui.Handle("/sys/kbd/>", func(ui.Event) { scrollRight() })
+
 	HandleKeys("exit", ui.StopLoop)
 	HandleKeys("help", func() {
 		menu = HelpMenu

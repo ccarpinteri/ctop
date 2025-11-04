@@ -25,12 +25,27 @@ func (row *CompactHeader) GetHeight() int {
 }
 
 func (row *CompactHeader) SetWidths(totalWidth int, widths []int) {
-	x := row.X
+	x := rowPadding // Header always starts at padding
+	widthIdx := 0
 
-	for n, w := range row.pars {
+	for _, w := range row.pars {
 		w.SetX(x)
-		w.SetWidth(widths[n])
-		x += widths[n] + colSpacing
+		// Scroll indicators get fixed width of 2
+		if w.TextFgColor == ui.ColorYellow {
+			w.SetWidth(2)
+			x += 2
+		} else {
+			// Regular columns use calculated widths
+			if widthIdx < len(widths) {
+				w.SetWidth(widths[widthIdx])
+				x += widths[widthIdx]
+				// Only add spacing if not the last column
+				if widthIdx < len(widths)-1 {
+					x += colSpacing
+				}
+				widthIdx++
+			}
+		}
 	}
 	row.Width = totalWidth
 }
@@ -63,4 +78,25 @@ func (row *CompactHeader) addFieldPar(s string) {
 	p.Height = row.Height
 	p.Border = false
 	row.pars = append(row.pars, p)
+}
+
+func (row *CompactHeader) addLeftIndicator() {
+	p := ui.NewPar("<")
+	p.Height = row.Height
+	p.Border = false
+	p.TextFgColor = ui.ColorYellow
+	row.pars = append(row.pars, p)
+}
+
+func (row *CompactHeader) addRightIndicator() {
+	p := ui.NewPar(">")
+	p.Height = row.Height
+	p.Border = false
+	p.TextFgColor = ui.ColorYellow
+	row.pars = append(row.pars, p)
+}
+
+// SetVisibleColumns is a no-op for headers (header manages its own visibility)
+func (row *CompactHeader) SetVisibleColumns(offset, count int) {
+	// Header manages its own column visibility in updateHeader()
 }

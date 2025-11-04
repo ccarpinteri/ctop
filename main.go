@@ -35,27 +35,65 @@ var (
 func main() {
 	defer panicExit()
 
+	// Disable default help flag to avoid conflict with -h
+	flag.Usage = printHelp
+
 	// parse command line arguments
 	var (
-		versionFlag     = flag.Bool("v", false, "output version information and exit")
-		helpFlag        = flag.Bool("h", false, "display this help dialog")
-		filterFlag      = flag.String("f", "", "filter containers")
-		activeOnlyFlag  = flag.Bool("a", false, "show active containers only")
-		sortFieldFlag   = flag.String("s", "", "select container sort field")
-		reverseSortFlag = flag.Bool("r", false, "reverse container sort order")
-		invertFlag      = flag.Bool("i", false, "invert default colors")
-		connectorFlag   = flag.String("connector", "docker", "container connector to use")
-		hostFlag        = flag.String("host", "", "Docker daemon host (e.g., tcp://192.168.1.100:2376)")
-		contextFlag     = flag.String("context", "", "Docker context to use")
+		// Connection options
+		hostFlag      string
+		contextFlag   string
+		connectorFlag string
+
+		// Filtering options
+		filterFlag     string
+		activeOnlyFlag bool
+
+		// Display options
+		sortFieldFlag   string
+		reverseSortFlag bool
+		invertFlag      bool
+
+		// General options
+		versionFlag bool
+		helpFlag    bool
 	)
+
+	// Connection flags
+	flag.StringVar(&hostFlag, "H", "", "")
+	flag.StringVar(&hostFlag, "host", "", "")
+	flag.StringVar(&contextFlag, "context", "", "")
+	flag.StringVar(&connectorFlag, "c", "docker", "")
+	flag.StringVar(&connectorFlag, "connector", "docker", "")
+
+	// Filtering flags
+	flag.BoolVar(&activeOnlyFlag, "a", false, "")
+	flag.BoolVar(&activeOnlyFlag, "all", false, "")
+	flag.StringVar(&filterFlag, "f", "", "")
+	flag.StringVar(&filterFlag, "filter", "", "")
+
+	// Display flags
+	flag.StringVar(&sortFieldFlag, "s", "", "")
+	flag.StringVar(&sortFieldFlag, "sort", "", "")
+	flag.BoolVar(&reverseSortFlag, "r", false, "")
+	flag.BoolVar(&reverseSortFlag, "reverse", false, "")
+	flag.BoolVar(&invertFlag, "i", false, "")
+	flag.BoolVar(&invertFlag, "invert", false, "")
+
+	// General flags
+	flag.BoolVar(&versionFlag, "v", false, "")
+	flag.BoolVar(&versionFlag, "version", false, "")
+	flag.BoolVar(&helpFlag, "h", false, "")
+	flag.BoolVar(&helpFlag, "help", false, "")
+
 	flag.Parse()
 
-	if *versionFlag {
+	if versionFlag {
 		fmt.Println(versionStr)
 		os.Exit(0)
 	}
 
-	if *helpFlag {
+	if helpFlag {
 		printHelp()
 		os.Exit(0)
 	}
@@ -70,25 +108,25 @@ func main() {
 	}
 
 	// override default config values with command line flags
-	if *filterFlag != "" {
-		config.Update("filterStr", *filterFlag)
+	if filterFlag != "" {
+		config.Update("filterStr", filterFlag)
 	}
 
-	if *activeOnlyFlag {
+	if activeOnlyFlag {
 		config.Toggle("allContainers")
 	}
 
-	if *sortFieldFlag != "" {
-		validSort(*sortFieldFlag)
-		config.Update("sortField", *sortFieldFlag)
+	if sortFieldFlag != "" {
+		validSort(sortFieldFlag)
+		config.Update("sortField", sortFieldFlag)
 	}
 
-	if *reverseSortFlag {
+	if reverseSortFlag {
 		config.Toggle("sortReversed")
 	}
 
 	// init ui
-	if *invertFlag {
+	if invertFlag {
 		InvertColorMap()
 	}
 	ui.ColorMap = ColorMap // override default colormap
@@ -99,7 +137,7 @@ func main() {
 
 	defer Shutdown()
 	// init grid, cursor, header
-	cSuper, err := connector.ByNameWithConfig(*connectorFlag, *hostFlag, *contextFlag)
+	cSuper, err := connector.ByNameWithConfig(connectorFlag, hostFlag, contextFlag)
 	if err != nil {
 		panic(err)
 	}
@@ -142,16 +180,31 @@ func panicExit() {
 	}
 }
 
-var helpMsg = `ctop - interactive container viewer
-
-usage: ctop [options]
-
-options:
-`
-
 func printHelp() {
-	fmt.Println(helpMsg)
-	flag.PrintDefaults()
-	fmt.Printf("\navailable connectors: ")
-	fmt.Println(strings.Join(connector.Enabled(), ", "))
+	fmt.Print(`ctop - interactive container viewer
+
+USAGE:
+  ctop [OPTIONS]
+
+CONNECTION OPTIONS:
+  -H, --host HOST         Docker daemon socket or TCP address
+                          Examples: tcp://192.168.1.100:2376, unix:///var/run/docker.sock
+      --context NAME      Docker context to use
+  -c, --connector TYPE    Container connector (default: docker)
+
+FILTERING OPTIONS:
+  -a, --all               Show all containers (default: running only)
+  -f, --filter PATTERN    Filter containers by name
+
+DISPLAY OPTIONS:
+  -s, --sort FIELD        Sort by: name, cpu, mem, net, io (default: name)
+  -r, --reverse           Reverse sort order
+  -i, --invert            Invert default colours
+
+GENERAL OPTIONS:
+  -h, --help              Display this help
+  -v, --version           Show version information
+
+`)
+	fmt.Printf("Available connectors: %s\n", strings.Join(connector.Enabled(), ", "))
 }

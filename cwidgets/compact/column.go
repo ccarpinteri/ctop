@@ -46,8 +46,11 @@ func newRowWidgets() []CompactCol {
 type CompactCol interface {
 	ui.GridBufferer
 	Reset()
-	Header() string  // header text to display for column
-	FixedWidth() int // fixed width size. if == 0, width is automatically calculated
+	Header() string       // header text to display for column
+	FixedWidth() int      // fixed width size. if == 0, width is automatically calculated
+	MinWidth() int        // minimum width for growable columns
+	MaxWidth() int        // maximum width for growable columns
+	GrowPriority() int    // priority for growing (1=highest, 0=fixed)
 	Highlight()
 	UnHighlight()
 	SetMeta(models.Meta)

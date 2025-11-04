@@ -43,6 +43,9 @@ func (s *Status) Highlight()                {}
 func (s *Status) UnHighlight()              {}
 func (s *Status) Header() string            { return "" }
 func (s *Status) FixedWidth() int           { return 3 }
+func (s *Status) MinWidth() int             { return 0 }
+func (s *Status) MaxWidth() int             { return 0 }
+func (s *Status) GrowPriority() int         { return 0 }
 
 func (s *Status) setState(val string) {
 	color := ui.ColorDefault

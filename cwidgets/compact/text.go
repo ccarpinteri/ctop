@@ -21,31 +21,47 @@ func (w *MetaCol) SetMeta(m models.Meta) {
 
 func NewNameCol() CompactCol {
 	c := &MetaCol{NewTextCol("NAME"), "name"}
-	c.fWidth = 30
+	c.minWidth = 25
+	c.maxWidth = 40
+	c.growPriority = 1 // Highest priority
 	return c
 }
 
 func NewCIDCol() CompactCol {
 	c := &MetaCol{NewTextCol("CID"), "id"}
-	c.fWidth = 12
+	c.minWidth = 13
+	c.maxWidth = 15
+	c.growPriority = 2 // Lower priority
 	return c
 }
 
 func NewImageCol() CompactCol {
-	return &MetaCol{NewTextCol("IMAGE"), "image"}
+	c := &MetaCol{NewTextCol("IMAGE"), "image"}
+	c.minWidth = 15
+	c.maxWidth = 35
+	c.growPriority = 1 // Highest priority
+	return c
 }
 
 func NewPortsCol() CompactCol {
-	return &MetaCol{NewTextCol("PORTS"), "ports"}
+	c := &MetaCol{NewTextCol("PORTS"), "ports"}
+	c.minWidth = 10
+	c.maxWidth = 25
+	c.growPriority = 2 // Lower priority
+	return c
 }
 
 func NewIpsCol() CompactCol {
-	return &MetaCol{NewTextCol("IPs"), "IPs"}
+	c := &MetaCol{NewTextCol("IPs"), "IPs"}
+	c.minWidth = 10
+	c.maxWidth = 20
+	c.growPriority = 2 // Lower priority
+	return c
 }
 
 func NewCreatedCol() CompactCol {
 	c := &MetaCol{NewTextCol("CREATED"), "created"}
-	c.fWidth = 19 // Year will be stripped e.g. "Thu Nov 26 07:44:03" without 2020 at end
+	c.fWidth = 19 // Fixed width - e.g. "Thu Nov 26 07:44:03" without year
 	return c
 }
 
@@ -54,7 +70,11 @@ type NetCol struct {
 }
 
 func NewNetCol() CompactCol {
-	return &NetCol{NewTextCol("NET RX/TX")}
+	c := &NetCol{NewTextCol("NET RX/TX")}
+	c.minWidth = 12
+	c.maxWidth = 14
+	c.growPriority = 2 // Lower priority
+	return c
 }
 
 func (w *NetCol) SetMetrics(m models.Metrics) {
@@ -67,7 +87,11 @@ type IOCol struct {
 }
 
 func NewIOCol() CompactCol {
-	return &IOCol{NewTextCol("IO R/W")}
+	c := &IOCol{NewTextCol("IO R/W")}
+	c.minWidth = 12
+	c.maxWidth = 14
+	c.growPriority = 2 // Lower priority
+	return c
 }
 
 func (w *IOCol) SetMetrics(m models.Metrics) {
@@ -86,7 +110,9 @@ type PIDCol struct {
 
 func NewPIDCol() CompactCol {
 	w := &PIDCol{NewTextCol("PIDS")}
-	w.fWidth = 4
+	w.minWidth = 4
+	w.maxWidth = 6
+	w.growPriority = 2 // Lower priority
 	return w
 }
 
@@ -104,7 +130,11 @@ type UptimeCol struct {
 }
 
 func NewUptimeCol() CompactCol {
-	return &UptimeCol{NewTextCol("UPTIME")}
+	c := &UptimeCol{NewTextCol("UPTIME")}
+	c.minWidth = 8
+	c.maxWidth = 12
+	c.growPriority = 2 // Lower priority
+	return c
 }
 
 func (w *UptimeCol) SetMeta(m models.Meta) {
@@ -113,8 +143,11 @@ func (w *UptimeCol) SetMeta(m models.Meta) {
 
 type TextCol struct {
 	*ui.Par
-	header string
-	fWidth int
+	header       string
+	fWidth       int // fixed width (0 = growable)
+	minWidth     int // minimum width
+	maxWidth     int // maximum width
+	growPriority int // 0=fixed, 1=highest priority, 2=medium, 3=lowest
 }
 
 func NewTextCol(header string) *TextCol {
@@ -147,7 +180,10 @@ func (w *TextCol) Reset()                    { w.setText("-") }
 func (w *TextCol) SetMeta(models.Meta)       {}
 func (w *TextCol) SetMetrics(models.Metrics) {}
 func (w *TextCol) Header() string            { return w.header }
-func (w *TextCol) FixedWidth() int           { return w.fWidth }
+func (w *TextCol) FixedWidth() int      { return w.fWidth }
+func (w *TextCol) MinWidth() int        { return w.minWidth }
+func (w *TextCol) MaxWidth() int        { return w.maxWidth }
+func (w *TextCol) GrowPriority() int    { return w.growPriority }
 
 func (w *TextCol) setText(s string) {
 	if w.fWidth > 0 && len(s) > w.fWidth {

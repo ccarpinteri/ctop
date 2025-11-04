@@ -23,6 +23,7 @@ var helpDialog = []menu.Item{
 	{"[f] - filter displayed containers", ""},
 	{"[h] - open this help dialog", ""},
 	{"[H] - toggle ctop header", ""},
+	{"[<] / [>] - scroll columns left/right", ""},
 	{"[s] - select container sort field", ""},
 	{"[r] - reverse container sort order", ""},
 	{"[o] - open single view", ""},

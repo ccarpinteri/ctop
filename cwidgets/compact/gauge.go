@@ -15,11 +15,19 @@ type CPUCol struct {
 }
 
 func NewCPUCol() CompactCol {
-	return &CPUCol{NewGaugeCol("CPU"), false}
+	c := &CPUCol{NewGaugeCol("CPU"), false}
+	c.minWidth = 6
+	c.maxWidth = 25
+	c.growPriority = 1 // Highest priority
+	return c
 }
 
 func NewCpuScaledCol() CompactCol {
-	return &CPUCol{NewGaugeCol("CPUS"), true}
+	c := &CPUCol{NewGaugeCol("CPUS"), true}
+	c.minWidth = 6
+	c.maxWidth = 25
+	c.growPriority = 1 // Highest priority
+	return c
 }
 
 func (w *CPUCol) SetMetrics(m models.Metrics) {
@@ -41,7 +49,11 @@ type MemCol struct {
 }
 
 func NewMemCol() CompactCol {
-	return &MemCol{NewGaugeCol("MEM")}
+	c := &MemCol{NewGaugeCol("MEM")}
+	c.minWidth = 12
+	c.maxWidth = 25
+	c.growPriority = 1 // Highest priority
+	return c
 }
 
 func (w *MemCol) SetMetrics(m models.Metrics) {
@@ -52,12 +64,22 @@ func (w *MemCol) SetMetrics(m models.Metrics) {
 
 type GaugeCol struct {
 	*ui.Gauge
-	header string
-	fWidth int
+	header       string
+	fWidth       int
+	minWidth     int
+	maxWidth     int
+	growPriority int
 }
 
 func NewGaugeCol(header string) *GaugeCol {
-	g := &GaugeCol{ui.NewGauge(), header, 0}
+	g := &GaugeCol{
+		Gauge:        ui.NewGauge(),
+		header:       header,
+		fWidth:       0,
+		minWidth:     0,
+		maxWidth:     0,
+		growPriority: 0,
+	}
 	g.Height = 1
 	g.Border = false
 	g.PaddingBottom = 0
@@ -86,6 +108,9 @@ func (w *GaugeCol) SetMeta(models.Meta)       {}
 func (w *GaugeCol) SetMetrics(models.Metrics) {}
 func (w *GaugeCol) Header() string            { return w.header }
 func (w *GaugeCol) FixedWidth() int           { return w.fWidth }
+func (w *GaugeCol) MinWidth() int             { return w.minWidth }
+func (w *GaugeCol) MaxWidth() int             { return w.maxWidth }
+func (w *GaugeCol) GrowPriority() int         { return w.growPriority }
 
 // GaugeCol implements CompactCol
 func (w *GaugeCol) Highlight() {
