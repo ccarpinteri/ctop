@@ -1,15 +1,14 @@
-FROM cgr.dev/chainguard/go:latest AS builder
+FROM golang:1.23-alpine AS builder
 
 WORKDIR /app
-COPY go.mod .
+COPY go.mod go.sum ./
 RUN go mod download
 
 COPY . .
-RUN make build && \
-    mkdir -p /go/bin && \
-    mv -v ctop /go/bin/
+RUN CGO_ENABLED=0 GOOS=linux go build -tags release -ldflags="-w -s" -o ctop .
 
-FROM scratch
+FROM alpine:latest
+RUN apk --no-cache add ca-certificates
 ENV TERM=linux
-COPY --from=0 /go/bin/ctop /ctop
+COPY --from=builder /app/ctop /ctop
 ENTRYPOINT ["/ctop"]

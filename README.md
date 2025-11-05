@@ -15,20 +15,24 @@ as well as a [single container view][single_view] for inspecting a specific cont
 
 ## Install
 
-Fetch the [latest release](https://github.com/lordoverlord/ctop/releases) for your platform:
+Fetch the [latest release](https://github.com/ccarpinteri/ctop/releases) for your platform:
 
 
 #### Linux (Generic)
 
 ```bash
-sudo wget https://github.com/lordoverlord/ctop/releases/download/v0.1.9/ctop-linux-amd64 -O /usr/local/bin/ctop
+sudo wget https://github.com/ccarpinteri/ctop/releases/download/v0.2.0/ctop-0.2.0-linux-amd64.tar.xz
+sudo tar -xJf ctop-0.2.0-linux-amd64.tar.xz
+sudo mv ctop /usr/local/bin/ctop
 sudo chmod +x /usr/local/bin/ctop
 ```
 
 #### OS X
 
 ```bash
-sudo curl -Lo /usr/local/bin/ctop https://github.com/lordoverlord/ctop/releases/download/v0.1.9/ctop-darwin-amd64
+curl -Lo ctop.tar.xz https://github.com/ccarpinteri/ctop/releases/download/v0.2.0/ctop-0.2.0-apple-darwin-arm64.tar.xz
+tar -xJf ctop.tar.xz
+sudo mv ctop /usr/local/bin/ctop
 sudo chmod +x /usr/local/bin/ctop
 ```
 
@@ -48,10 +52,8 @@ ctop-windows-amd64.exe
 docker run --rm -ti \
   --name=ctop \
   --volume /var/run/docker.sock:/var/run/docker.sock:ro \
-  ghcr.io/lordoverlord/ctop:latest
+  ghcr.io/ccarpinteri/ctop:latest
 ```
-
-You can also use the tag dev, if youre interested in the latest development version.
 
 ## Building
 
@@ -72,8 +74,10 @@ Config file values will be loaded and applied the next time `ctop` is started.
 Option | Description
 --- | ---
 `-a`	| show active containers only
+`--context <string>` | use named Docker context
 `-f <string>` | set an initial filter string
 `-h`	| display help dialog
+`--host <string>` | Docker daemon endpoint (e.g., tcp://192.168.1.100:2376)
 `-i`  | invert default colors
 `-r`	| reverse container sort order
 `-s`  | select initial container sort field
