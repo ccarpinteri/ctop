@@ -21,37 +21,31 @@ Fetch the [latest release](https://github.com/ccarpinteri/ctop/releases) for you
 #### Linux (Generic)
 
 ```bash
-sudo wget https://github.com/ccarpinteri/ctop/releases/download/v0.2.0/ctop-0.2.0-linux-amd64.tar.xz
-sudo tar -xJf ctop-0.2.0-linux-amd64.tar.xz
+wget https://github.com/ccarpinteri/ctop/releases/download/v0.2.1/ctop-0.2.1-linux-amd64.tar.xz
+tar -xJf ctop-0.2.1-linux-amd64.tar.xz
 sudo mv ctop /usr/local/bin/ctop
-sudo chmod +x /usr/local/bin/ctop
+rm ctop-0.2.1-linux-amd64.tar.xz
 ```
 
 #### OS X
 
 ```bash
-curl -Lo ctop.tar.xz https://github.com/ccarpinteri/ctop/releases/download/v0.2.0/ctop-0.2.0-apple-darwin-arm64.tar.xz
+curl -Lo ctop.tar.xz https://github.com/ccarpinteri/ctop/releases/download/v0.2.1/ctop-0.2.1-apple-darwin-arm64.tar.xz
 tar -xJf ctop.tar.xz
 sudo mv ctop /usr/local/bin/ctop
-sudo chmod +x /usr/local/bin/ctop
+rm ctop.tar.xz
 ```
 
 #### Windows
 
-##### Currently only available using the binary release.
-
-Work in progress to provide a distribution via Scoop. or winget.
-
-'```powershell
-ctop-windows-amd64.exe
-```
+Download the latest [Windows release](https://github.com/ccarpinteri/ctop/releases/latest) and extract `ctop.exe`.
 
 #### Docker
 
 ```bash
-docker run --rm -ti \
+docker run --rm -it \
   --name=ctop \
-  --volume /var/run/docker.sock:/var/run/docker.sock:ro \
+  -v /var/run/docker.sock:/var/run/docker.sock \
   ghcr.io/ccarpinteri/ctop:latest
 ```
 
@@ -71,17 +65,35 @@ Config file values will be loaded and applied the next time `ctop` is started.
 
 ### Options
 
-Option | Description
---- | ---
-`-a`	| show active containers only
-`--context <string>` | use named Docker context
-`-f <string>` | set an initial filter string
-`-h`	| display help dialog
-`--host <string>` | Docker daemon endpoint (e.g., tcp://192.168.1.100:2376)
-`-i`  | invert default colors
-`-r`	| reverse container sort order
-`-s`  | select initial container sort field
-`-v`	| output version information and exit
+**Connection Options**
+
+| Option | Description |
+| --- | --- |
+| `-H`, `--host HOST` | Docker daemon socket or TCP address (e.g., `tcp://192.168.1.100:2376`, `unix:///var/run/docker.sock`) |
+| `--context NAME` | Docker context to use |
+| `-c`, `--connector TYPE` | Container connector (default: docker) |
+
+**Filtering Options**
+
+| Option | Description |
+| --- | --- |
+| `-a`, `--all` | Show all containers (default: running only) |
+| `-f`, `--filter PATTERN` | Filter containers by name |
+
+**Display Options**
+
+| Option | Description |
+| --- | --- |
+| `-s`, `--sort FIELD` | Sort by: name, cpu, mem, net, io (default: name) |
+| `-r`, `--reverse` | Reverse sort order |
+| `-i`, `--invert` | Invert default colours |
+
+**General Options**
+
+| Option | Description |
+| --- | --- |
+| `-h`, `--help` | Display help |
+| `-v`, `--version` | Show version information |
 
 ### Keybindings
 
@@ -98,13 +110,15 @@ Option | Description
 |       <kbd>l</kbd>       | View container logs (`t` to toggle timestamp when open)    |
 |       <kbd>e</kbd>       | Exec Shell                                                 |
 |       <kbd>c</kbd>       | Configure columns                                          |
+|       <kbd>&lt;</kbd>    | Scroll left (show hidden columns on the left)              |
+|       <kbd>&gt;</kbd>    | Scroll right (show hidden columns on the right)            |
 |       <kbd>S</kbd>       | Save current configuration to file                         |
 |       <kbd>q</kbd>       | Quit ctop                                                  |
 
 [build]: _docs/build.md
 [connectors]: _docs/connectors.md
 [single_view]: _docs/single.md
-[release]: https://img.shields.io/github/release/lordoverlord/ctop.svg "ctop"
+[release]: https://img.shields.io/github/release/ccarpinteri/ctop.svg "ctop"
 
 ## Alternatives
 
