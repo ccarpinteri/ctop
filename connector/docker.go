@@ -198,6 +198,11 @@ func ipsFormat(networks map[string]api.ContainerNetwork) string {
 func (cm *Docker) refresh(c *container.Container) {
 	insp, found, failed := cm.inspect(c.Id)
 	if failed {
+		// Inspection failed - retry after a delay
+		go func() {
+			time.Sleep(2 * time.Second)
+			cm.needsRefresh <- c.Id
+		}()
 		return
 	}
 	// remove container if no longer exists
@@ -242,11 +247,22 @@ func (cm *Docker) inspect(id string) (insp *api.Container, found bool, failed bo
 }
 
 func calcUptime(insp *api.Container) string {
+	// Validate StartedAt timestamp
+	if insp.State.StartedAt.IsZero() || insp.State.StartedAt.Year() < 1971 {
+		return "-"
+	}
+
 	endTime := insp.State.FinishedAt
 	if endTime.IsZero() || insp.State.Running {
 		endTime = time.Now()
 	}
 	uptime := endTime.Sub(insp.State.StartedAt)
+
+	// Validate calculated uptime is reasonable
+	if uptime < 0 || uptime > 87600*time.Hour {
+		return "-"
+	}
+
 	return durafmt.Parse(uptime).LimitFirstN(1).String()
 }
 
@@ -306,23 +322,43 @@ func (cm *Docker) LoopUptimeUpdates() {
 		select {
 		case <-ticker.C:
 			cm.lock.RLock()
+			needsRefresh := []string{}
 			for _, c := range cm.containers {
-				// Only show uptime for running containers
+				// Only update uptime for running containers
+				// For stopped containers, refresh() sets uptime to "-"
 				if c.Meta["state"] == "running" {
 					startedAtStr := c.GetMeta("started_at")
 					if startedAtStr != "" {
 						startedAt, err := time.Parse(time.RFC3339, startedAtStr)
-						if err == nil {
+						if err == nil && startedAt.Year() > 1971 {
 							uptime := time.Since(startedAt)
-							c.SetMeta("uptime", durafmt.Parse(uptime).LimitFirstN(1).String())
+							// Only show uptime if it's reasonable (not in the future, not > 10 years)
+							if uptime > 0 && uptime < 87600*time.Hour {
+								c.SetMeta("uptime", durafmt.Parse(uptime).LimitFirstN(1).String())
+							} else {
+								// Invalid uptime calculation - refresh to get new data
+								needsRefresh = append(needsRefresh, c.Id)
+							}
+						} else {
+							// Invalid timestamp - refresh to get new data
+							needsRefresh = append(needsRefresh, c.Id)
 						}
+					} else {
+						// Missing timestamp - refresh to get new data
+						needsRefresh = append(needsRefresh, c.Id)
 					}
-				} else {
-					// Show dash for non-running containers
-					c.SetMeta("uptime", "-")
 				}
 			}
 			cm.lock.RUnlock()
+
+			// Queue containers with bad timestamps for refresh
+			for _, id := range needsRefresh {
+				select {
+				case cm.needsRefresh <- id:
+				default:
+					// Channel full, skip
+				}
+			}
 		case <-cm.closed:
 			return
 		}

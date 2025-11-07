@@ -131,8 +131,8 @@ type UptimeCol struct {
 
 func NewUptimeCol() CompactCol {
 	c := &UptimeCol{NewTextCol("UPTIME")}
-	c.minWidth = 8
-	c.maxWidth = 12
+	c.minWidth = 10
+	c.maxWidth = 15
 	c.growPriority = 2 // Lower priority
 	return c
 }
