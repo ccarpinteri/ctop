@@ -21,16 +21,16 @@ Fetch the [latest release](https://github.com/ccarpinteri/ctop/releases) for you
 #### Linux (Generic)
 
 ```bash
-wget https://github.com/ccarpinteri/ctop/releases/download/v0.2.1/ctop-0.2.1-linux-amd64.tar.xz
-tar -xJf ctop-0.2.1-linux-amd64.tar.xz
+wget https://github.com/ccarpinteri/ctop/releases/download/v0.2.2/ctop-0.2.2-linux-amd64.tar.xz
+tar -xJf ctop-0.2.2-linux-amd64.tar.xz
 sudo mv ctop /usr/local/bin/ctop
-rm ctop-0.2.1-linux-amd64.tar.xz
+rm ctop-0.2.2-linux-amd64.tar.xz
 ```
 
 #### OS X
 
 ```bash
-curl -Lo ctop.tar.xz https://github.com/ccarpinteri/ctop/releases/download/v0.2.1/ctop-0.2.1-apple-darwin-arm64.tar.xz
+curl -Lo ctop.tar.xz https://github.com/ccarpinteri/ctop/releases/download/v0.2.2/ctop-0.2.2-apple-darwin-arm64.tar.xz
 tar -xJf ctop.tar.xz
 sudo mv ctop /usr/local/bin/ctop
 rm ctop.tar.xz
